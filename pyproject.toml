@@ -1,0 +1,45 @@
+[project]
+name = "ship-fy-fastapi"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Evandro Calado",email = "evandrocalado07@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13, <4.0"
+dependencies = [
+    "fastapi[standard] (>=0.115.12,<0.116.0)",
+    "scalar-fastapi (>=1.0.3,<2.0.0)"
+]
+
+[tool.poetry.group.dev.dependencies]
+taskipy = "^1.14.1"
+ruff = "^0.11.12"
+
+[tool.ruff]
+line-length = 79
+extend-exclude = ['migrations']
+
+[tool.ruff.lint]
+preview = true
+select = ['I', 'F', 'E', 'W', 'PL', 'PT', 'FAST']
+
+[tool.ruff.format]
+preview = true
+quote-style = 'single'
+
+[tool.taskipy.tasks]
+lint = 'ruff check'
+pre_format = 'ruff check --fix'
+format = 'ruff format'
+dev = 'fastapi dev ship_fy_fastapi/main.py'
+pre_test = 'task lint'
+test = 'pytest -s -x --cov=ship_fy_fastapi -vv'
+post_test = 'coverage html'
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+
+
