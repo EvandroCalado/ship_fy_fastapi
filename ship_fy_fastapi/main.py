@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, status
 from scalar_fastapi import get_scalar_api_reference
 
+from .database import Database
 from .schemas import (
     ShipmentCreate,
     ShipmentRead,
@@ -9,38 +10,7 @@ from .schemas import (
 
 app = FastAPI()
 
-shipments = {
-    12701: {
-        'weight': 0.6,
-        'content': 'glassware',
-        'status': 'placed',
-        'destination': 12345,
-    },
-    12702: {
-        'weight': 1.2,
-        'content': 'silverware',
-        'status': 'in transit',
-        'destination': 12345,
-    },
-    12703: {
-        'weight': 1.5,
-        'content': 'utensils',
-        'status': 'delivered',
-        'destination': 12345,
-    },
-    12704: {
-        'weight': 2.0,
-        'content': 'clothes',
-        'status': 'in transit',
-        'destination': 12345,
-    },
-    12705: {
-        'weight': 2.5,
-        'content': 'books',
-        'status': 'shipped',
-        'destination': 12345,
-    },
-}
+db = Database()
 
 
 @app.get('/scalar', include_in_schema=False)
@@ -57,24 +27,19 @@ def get_scalar_docs():
     response_model=ShipmentRead,
 )
 def create_shipment(shipment: ShipmentCreate):
-    new_id = max(shipments.keys()) + 1
+    result = db.create(shipment)
 
-    shipments[new_id] = {
-        **shipment.model_dump(),
-        'destination': shipment.destination,
-    }
-
-    return {'id': new_id}
+    return result
 
 
-@app.get(
-    '/shipment/latest',
-    status_code=status.HTTP_200_OK,
-    response_model=ShipmentRead,
-)
-def get_latest_shipment():
-    id = max(shipments.keys())
-    return shipments[id]
+# @app.get(
+#     '/shipment/latest',
+#     status_code=status.HTTP_200_OK,
+#     response_model=ShipmentRead,
+# )
+# def get_latest_shipment():
+#     id = max(shipments.keys())
+#     return shipments[id]
 
 
 @app.get(
@@ -83,13 +48,15 @@ def get_latest_shipment():
     response_model=ShipmentRead,
 )
 def get_shipment(id: int):
-    if id not in shipments:
+    shipments = db.get(id)
+
+    if shipments is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Shipment not found',
         )
 
-    return shipments[id]
+    return shipments
 
 
 @app.patch(
@@ -97,16 +64,18 @@ def get_shipment(id: int):
     status_code=status.HTTP_200_OK,
     response_model=ShipmentRead,
 )
-def update_shipment(id: int, body: ShipmentUpdate):
-    if id not in shipments:
+def update_shipment(id: int, shipment: ShipmentUpdate):
+    shipmentExists = db.get(id)
+
+    if shipmentExists is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Shipment not found',
         )
 
-    shipments[id].update(body.model_dump(exclude_none=True))
+    shipment = db.update(id, shipment)
 
-    return shipments[id]
+    return shipment
 
 
 @app.delete(
@@ -115,13 +84,15 @@ def update_shipment(id: int, body: ShipmentUpdate):
     response_model=dict,
 )
 def delete_shipment(id: int):
-    if id not in shipments:
+    shipmentExists = db.get(id)
+
+    if shipmentExists is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Shipment not found',
         )
 
-    del shipments[id]
+    db.delete(id)
 
     return {
         'message': 'Shipment deleted',

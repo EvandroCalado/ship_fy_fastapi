@@ -17,9 +17,8 @@ class ShipmentCreate(BaseModel):
 
 
 class ShipmentRead(ShipmentCreate):
-    status: ShipmentStatus = Field(
-        description='Shipment status', default=ShipmentStatus.placed
-    )
+    id: int
+    status: ShipmentStatus = Field(description='Shipment status')
 
 
 class ShipmentUpdate(BaseModel):
@@ -30,4 +29,7 @@ class ShipmentUpdate(BaseModel):
         description='Weight in kilograms', lt=25, ge=1, default=None
     )
     destination: int | None = Field(description='Postal code', default=None)
-    status: ShipmentStatus
+    status: ShipmentStatus | None = Field(
+        description='Shipment status ',
+        default=None,
+    )

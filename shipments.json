@@ -1,0 +1,44 @@
+[
+  {
+    "id": 12701,
+    "weight": 0.6,
+    "content": "glassware",
+    "status": "placed",
+    "destination": 12345
+  },
+  {
+    "id": 12702,
+    "weight": 1.2,
+    "content": "silverware",
+    "status": "in transit",
+    "destination": 12345
+  },
+  {
+    "id": 12703,
+    "weight": 1.5,
+    "content": "utensils",
+    "status": "delivered",
+    "destination": 12345
+  },
+  {
+    "id": 12704,
+    "weight": 2.0,
+    "content": "clothes",
+    "status": "in transit",
+    "destination": 12345
+  },
+  {
+    "id": 12705,
+    "weight": 2.5,
+    "content": "books",
+    "status": "shipped",
+    "destination": 12345
+  },
+  {
+    "content": "plan trees",
+    "weight": 2.4,
+    "destination": 12345,
+    "id": 12706,
+    "status": "placed"
+  }
+]
