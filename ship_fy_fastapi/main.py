@@ -1,16 +1,45 @@
-from typing import Any
-
 from fastapi import FastAPI, HTTPException, status
 from scalar_fastapi import get_scalar_api_reference
+
+from .schemas import (
+    ShipmentCreate,
+    ShipmentRead,
+    ShipmentUpdate,
+)
 
 app = FastAPI()
 
 shipments = {
-    12701: {'weight': 0.6, 'content': 'glassware', 'status': 'placed'},
-    12702: {'weight': 1.2, 'content': 'silverware', 'status': 'in transit'},
-    12703: {'weight': 1.5, 'content': 'utensils', 'status': 'delivered'},
-    12704: {'weight': 2.0, 'content': 'clothes', 'status': 'in transit'},
-    12705: {'weight': 2.5, 'content': 'books', 'status': 'shipped'},
+    12701: {
+        'weight': 0.6,
+        'content': 'glassware',
+        'status': 'placed',
+        'destination': 12345,
+    },
+    12702: {
+        'weight': 1.2,
+        'content': 'silverware',
+        'status': 'in transit',
+        'destination': 12345,
+    },
+    12703: {
+        'weight': 1.5,
+        'content': 'utensils',
+        'status': 'delivered',
+        'destination': 12345,
+    },
+    12704: {
+        'weight': 2.0,
+        'content': 'clothes',
+        'status': 'in transit',
+        'destination': 12345,
+    },
+    12705: {
+        'weight': 2.5,
+        'content': 'books',
+        'status': 'shipped',
+        'destination': 12345,
+    },
 }
 
 
@@ -22,38 +51,38 @@ def get_scalar_docs():
     )
 
 
-@app.post('/shipment', status_code=status.HTTP_201_CREATED)
-def create_shipment(data: dict[str, Any]) -> dict[str, Any]:
-    max_weight = 25
-
-    content = data['content']
-    weight = data['weight']
-
-    if weight > max_weight:
-        raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail='maximum weight limit is 25kgs',
-        )
-
+@app.post(
+    '/shipment',
+    status_code=status.HTTP_201_CREATED,
+    response_model=ShipmentRead,
+)
+def create_shipment(shipment: ShipmentCreate):
     new_id = max(shipments.keys()) + 1
 
     shipments[new_id] = {
-        'content': content,
-        'weight': weight,
-        'status': 'placed',
+        **shipment.model_dump(),
+        'destination': shipment.destination,
     }
 
     return {'id': new_id}
 
 
-@app.get('/shipment/latest', status_code=status.HTTP_200_OK)
-def get_latest_shipment() -> dict[str, Any]:
+@app.get(
+    '/shipment/latest',
+    status_code=status.HTTP_200_OK,
+    response_model=ShipmentRead,
+)
+def get_latest_shipment():
     id = max(shipments.keys())
     return shipments[id]
 
 
-@app.get('/shipment/{id}', status_code=status.HTTP_200_OK)
-def get_shipment(id: int) -> dict[str, Any]:
+@app.get(
+    '/shipment/{id}',
+    status_code=status.HTTP_200_OK,
+    response_model=ShipmentRead,
+)
+def get_shipment(id: int):
     if id not in shipments:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -63,21 +92,29 @@ def get_shipment(id: int) -> dict[str, Any]:
     return shipments[id]
 
 
-@app.patch('/shipment/{id}', status_code=status.HTTP_200_OK)
-def update_shipment(id: int, data: dict[str, Any]) -> dict[str, Any]:
+@app.patch(
+    '/shipment/{id}',
+    status_code=status.HTTP_200_OK,
+    response_model=ShipmentRead,
+)
+def update_shipment(id: int, body: ShipmentUpdate):
     if id not in shipments:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Shipment not found',
         )
 
-    shipments[id].update(data)
+    shipments[id].update(body.model_dump(exclude_none=True))
 
     return shipments[id]
 
 
-@app.delete('/shipment/{id}', status_code=status.HTTP_200_OK)
-def delete_shipment(id: int) -> dict[str, Any]:
+@app.delete(
+    '/shipment/{id}',
+    status_code=status.HTTP_200_OK,
+    response_model=dict,
+)
+def delete_shipment(id: int):
     if id not in shipments:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -86,4 +123,6 @@ def delete_shipment(id: int) -> dict[str, Any]:
 
     del shipments[id]
 
-    return shipments[id]
+    return {
+        'message': 'Shipment deleted',
+    }
