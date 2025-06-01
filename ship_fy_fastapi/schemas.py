@@ -1,13 +1,8 @@
-from enum import Enum
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-
-class ShipmentStatus(str, Enum):
-    placed = 'placed'
-    in_transit = 'in_transit'
-    shipped = 'shipped'
-    delivered = 'delivered'
+from ship_fy_fastapi.database.models import ShipmentStatus
 
 
 class ShipmentCreate(BaseModel):
@@ -17,18 +12,15 @@ class ShipmentCreate(BaseModel):
 
 
 class ShipmentRead(ShipmentCreate):
-    id: int
+    id: int = Field(description='Shipment id')
     status: ShipmentStatus = Field(description='Shipment status')
+    estimated_delivery: datetime = Field(description='Estimated delivery date')
 
 
 class ShipmentUpdate(BaseModel):
-    content: str | None = Field(
-        description='Content description', default=None
+    estimated_delivery: datetime | None = Field(
+        description='Estimated delivery date', default=None
     )
-    weight: float | None = Field(
-        description='Weight in kilograms', lt=25, ge=1, default=None
-    )
-    destination: int | None = Field(description='Postal code', default=None)
     status: ShipmentStatus | None = Field(
         description='Shipment status ',
         default=None,
